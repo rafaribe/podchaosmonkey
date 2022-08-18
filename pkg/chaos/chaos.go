@@ -28,12 +28,7 @@ func NewPodChaosMonkey(client kubernetes.Interface) *PodChaosMonkey {
 	defer logger.Sync() // flushes buffer, if any
 	log := logger.Sugar()
 
-	viper.BindEnv("INTERVAL_IN_SECONDS")
-	viper.BindEnv("NAMESPACE")
-	viper.SetDefault("INTERVAL_IN_SECONDS", 10)
-	viper.SetDefault("GRACE_PERIOD_SECONDS", 5)
-	viper.SetDefault("NAMESPACE", "workloads")
-	viper.SetDefault("LABELS", "podchaosmonkey=true")
+
 	labels, err := labels.Parse(viper.GetString("LABELS"))
 	if err != nil {
 		log.Error("Failed to parse labels: %s", err.Error())
@@ -49,7 +44,7 @@ func NewPodChaosMonkey(client kubernetes.Interface) *PodChaosMonkey {
 }
 
 func InitKubernetesClient() kubernetes.Interface {
-	kubeConfigEnvPath := viper.GetString("KUBECONFIG")
+	kubeConfigEnvPath := viper.GetString("KUBECONFwIG")
 	if kubeConfigEnvPath != "" {
 		return getLocalKubernetesClient(&kubeConfigEnvPath)
 	}

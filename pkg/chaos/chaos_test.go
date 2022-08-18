@@ -1,34 +1,33 @@
 package chaos
 
 import (
-	"os"
 	"testing"
 
+	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
-	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/fake"
+
+	env "podchaosmonkey/pkg/environment"
 )
 
-func TestGetAppConfiguration(t *testing.T) {
+func TestNewPodChaosMonkey(t *testing.T) {
 	{
 		tests := map[string]struct {
 			input           map[string]string
 			want            *PodChaosMonkey
-			wantNilConfig   bool
 			inClusterConfig bool
 		}{
-			"outside cluster config": {input: map[string]string{"KUBECONFIG": "/Users/rafaribe/.kube/config", "NAMESPACE": "workloads"}, want: &PodChaosMonkey{Namespace: "workloads", GracePeriodInSeconds: 5, IntervalInSeconds: 10}, wantNilConfig: false},
-			"in cluster config":      {input: map[string]string{"NAMESPACE": "workloads"}, want: &PodChaosMonkey{Namespace: "workloads", GracePeriodInSeconds: 5, IntervalInSeconds: 10}, wantNilConfig: true},
+			"outside cluster config": {input: map[string]string{"KUBECONFIG": "/Users/rafaribe/.kube/config", "NAMESPACE": "workloads"}, want: &PodChaosMonkey{Namespace: "workloads", GracePeriodInSeconds: 5, IntervalInSeconds: 10}, inClusterConfig: false},
+			"in cluster config":      {input: map[string]string{"NAMESPACE": "workloads"}, want: &PodChaosMonkey{Namespace: "workloads", GracePeriodInSeconds: 5, IntervalInSeconds: 10}, inClusterConfig: true},
 		}
 
 		for name, tc := range tests {
+			env.LoadEnv()
 			t.Run(name, func(t *testing.T) {
-				setVals(tc.input)
-				var client kubernetes.Interface
+				env.SetVals(tc.input)
+				client := fake.NewSimpleClientset()
 				if tc.inClusterConfig {
-					client = fake.NewSimpleClientset()
-				} else {
-					client = InitKubernetesClient()
+					assert.Empty(t, viper.GetString("KUBECONFIG"))
 				}
 				got := NewPodChaosMonkey(client)
 
@@ -36,27 +35,8 @@ func TestGetAppConfiguration(t *testing.T) {
 				assert.Equal(t, tc.want.GracePeriodInSeconds, got.GracePeriodInSeconds)
 				assert.Equal(t, tc.want.IntervalInSeconds, got.IntervalInSeconds)
 
-				if tc.wantNilConfig {
-					assert.Nil(t, got.Client)
-				} else {
-					assert.NotNil(t, got.Client)
-				}
-				clearVals(tc.input)
 			})
+			env.ClearVals(tc.input)
 		}
-	}
-}
-
-// Utility Functuon to set the env vars during testing
-func setVals(vals map[string]string) {
-	for k, v := range vals {
-		os.Setenv(k, v)
-	}
-}
-
-// Utility Functuon just to remove the the env vars during testing
-func clearVals(vals map[string]string) {
-	for k := range vals {
-		os.Setenv(k, "")
 	}
 }
