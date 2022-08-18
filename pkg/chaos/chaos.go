@@ -28,7 +28,6 @@ func NewPodChaosMonkey(client kubernetes.Interface) *PodChaosMonkey {
 	defer logger.Sync() // flushes buffer, if any
 	log := logger.Sugar()
 
-
 	labels, err := labels.Parse(viper.GetString("LABELS"))
 	if err != nil {
 		log.Error("Failed to parse labels: %s", err.Error())
@@ -89,10 +88,12 @@ func (p *PodChaosMonkey) getAndFilterPods() []v1.Pod {
 	logger, _ := zap.NewDevelopment()
 	defer logger.Sync() // flushes buffer, if any
 	log := logger.Sugar()
+
 	podList, err := p.Client.CoreV1().Pods(p.Namespace).List(context.TODO(), metav1.ListOptions{TimeoutSeconds: &p.GracePeriodInSeconds})
 	if err != nil {
 		panic(err.Error())
 	}
+
 	filteredPods := filterPodsByLabels(podList.Items, p.Labels)
 	log.Debugf("Total %d pods, %d match the label selector", len(podList.Items), len(filteredPods))
 	return filteredPods
