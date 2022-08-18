@@ -1,0 +1,32 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+
+metadata:
+  name: {{ include "podchaosmonkey.clusterrole" . }}-binding
+  namespace: {{ .Release.Namespace }}
+
+roleRef:
+  kind: ClusterRole
+  name: {{ include "podchaosmonkey.clusterrole" . }}
+  apiGroup: rbac.authorization.k8s.io
+
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "podchaosmonkey.serviceAccountName" . }}
+    namespace: {{ .Release.Namespace }}
+--- 
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ include "podchaosmonkey.clusterrole" . }}-binding
+  namespace: {{ .Values.clusterRole.targetNamespace }}
+
+roleRef:
+  kind: ClusterRole
+  name: {{ include "podchaosmonkey.clusterrole" . }}
+  apiGroup: rbac.authorization.k8s.io
+
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "podchaosmonkey.serviceAccountName" . }}
+    namespace: {{ .Release.Namespace }}
