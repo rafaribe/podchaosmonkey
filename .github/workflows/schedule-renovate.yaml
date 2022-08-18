@@ -15,9 +15,6 @@ on:
   schedule:
     # Execute every hour at minute 20
     - cron: "0 5 * * *"
-  push:
-    branches:
-      - main
     paths:
       - ".github/renovate.json"
       - ".github/renovate/**.json"

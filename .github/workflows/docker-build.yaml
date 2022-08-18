@@ -2,8 +2,8 @@ name: docker
 
 on:
   push:
-    branches:
-      - main
+    tags:
+      - '*'
 
 jobs:
   #Using this action https://github.com/marketplace/actions/build-and-push-docker-images
