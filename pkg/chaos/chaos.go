@@ -27,7 +27,6 @@ func NewPodChaosMonkey(client kubernetes.Interface) *PodChaosMonkey {
 	logger, _ := zap.NewDevelopment()
 	defer logger.Sync() // flushes buffer, if any
 	log := logger.Sugar()
-
 	labels, err := labels.Parse(viper.GetString("LABELS"))
 	if err != nil {
 		log.Error("Failed to parse labels: %s", err.Error())
@@ -43,7 +42,7 @@ func NewPodChaosMonkey(client kubernetes.Interface) *PodChaosMonkey {
 }
 
 func InitKubernetesClient() kubernetes.Interface {
-	kubeConfigEnvPath := viper.GetString("KUBECONFwIG")
+	kubeConfigEnvPath := viper.GetString("KUBECONFIG")
 	if kubeConfigEnvPath != "" {
 		return getLocalKubernetesClient(&kubeConfigEnvPath)
 	}

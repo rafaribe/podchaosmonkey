@@ -5,8 +5,8 @@
 replicaCount: 1
 
 image:
-  repository: ghcr.io/rafaribe/pod-chaos-monkey
-  pullPolicy: IfNotPresent
+  repository: ghcr.io/rafaribe/podchaosmonkey
+  pullPolicy: Always
   # Overrides the image tag whose default is the chart appVersion.
   tag: "latest"
 

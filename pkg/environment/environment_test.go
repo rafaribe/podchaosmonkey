@@ -32,6 +32,7 @@ func TestLoadEnv(t *testing.T) {
 	}
 }
 
+// Unit Testing function because it is used on other unit tests so we need to make sure it works properly
 func TestSetVals(t *testing.T) {
 	{
 		tests := map[string]struct {
@@ -51,6 +52,7 @@ func TestSetVals(t *testing.T) {
 	}
 }
 
+// Unit Testing function because it is used on other unit tests so we need to make sure it works properly
 func TestClearVals(t *testing.T) {
 	{
 		tests := map[string]struct {

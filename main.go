@@ -4,10 +4,10 @@ package main
 import (
 	"context"
 
-	"github.com/spf13/viper"
 	"go.uber.org/zap"
 
 	chaos "podchaosmonkey/pkg/chaos"
+	env "podchaosmonkey/pkg/environment"
 )
 
 func main() {
@@ -16,7 +16,7 @@ func main() {
 	defer logger.Sync() // flushes buffer, if any
 	log := logger.Sugar()
 	log.Info("Starting pod chaos monkey")
-	viper.AutomaticEnv()
+	env.LoadEnv()
 	client := chaos.InitKubernetesClient()
 	podChaosMonkey := chaos.NewPodChaosMonkey(client)
 	podChaosMonkey.Start(context.Background())
