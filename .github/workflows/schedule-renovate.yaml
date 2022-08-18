@@ -15,9 +15,6 @@ on:
   schedule:
     # Execute every hour at minute 20
     - cron: "0 5 * * *"
-    paths:
-      - ".github/renovate.json"
-      - ".github/renovate/**.json"
 
 env:
   LOG_LEVEL: info
