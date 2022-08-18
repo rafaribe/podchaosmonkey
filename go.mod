@@ -5,7 +5,7 @@ go 1.19
 require (
 	go.uber.org/zap v1.22.0
 	k8s.io/apimachinery v0.24.4
-	k8s.io/client-go v0.24.4
+	k8s.io/client-go v1.5.2
 )
 
 require (
