@@ -1,4 +1,3 @@
-// Note: the example only works with the code within the same release/branch.
 package main
 
 import (
@@ -7,6 +6,7 @@ import (
 	"go.uber.org/zap"
 
 	chaos "podchaosmonkey/pkg/chaos"
+	client "podchaosmonkey/pkg/client"
 	env "podchaosmonkey/pkg/environment"
 )
 
@@ -17,7 +17,8 @@ func main() {
 	log := logger.Sugar()
 	log.Info("Starting pod chaos monkey")
 	env.LoadEnv()
-	client := chaos.InitKubernetesClient()
+	client := client.InitKubernetesClient()
 	podChaosMonkey := chaos.NewPodChaosMonkey(client)
-	podChaosMonkey.Start(context.Background())
+	ctx := context.Background()
+	podChaosMonkey.Start(ctx)
 }

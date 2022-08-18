@@ -29,6 +29,8 @@ If we want to set the KUBECONFIG we can do so like this:
 KUBECONFIG=~/.kube/config
 ```
 
+This app will attempt to delete pods in a Running State and will not delete pods with Finalizers set. Finalizers are set to prevent resources from being deleted and are usually managed by Kubernetes Operators that take care of the lifecycle of these pods. If you still want to delete pods with Finalizers set you can do so by setting the `INCLUDE_FINALIZERS` environment variable to `true`."
+
 ## Configuration
 
 The application can be configured with the following environment variables:
@@ -40,3 +42,4 @@ The application can be configured with the following environment variables:
 | INTERVAL_SECONDS     | `10`                  | Time in seconds between pod deletes                                                             |
 | GRACE_PERIOD_SECONDS | `5`                   |                                                                                                 |
 | LABELS               | `podchaosmonkey=true` | This label needs to be set on the pod Spec for the elegible workloads on the selected namespace |
+| INCLUDE_FINALIZERS   | `false`               | Allows the deletion of pods with finalizers set.                                                |

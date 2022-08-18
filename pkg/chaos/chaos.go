@@ -11,8 +11,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/clientcmd"
 )
 
 type PodChaosMonkey struct {
@@ -21,6 +19,7 @@ type PodChaosMonkey struct {
 	IntervalInSeconds    int
 	GracePeriodInSeconds int64
 	Labels               labels.Selector
+	IncludeFinalizers    bool
 }
 
 func NewPodChaosMonkey(client kubernetes.Interface) *PodChaosMonkey {
@@ -38,66 +37,30 @@ func NewPodChaosMonkey(client kubernetes.Interface) *PodChaosMonkey {
 		IntervalInSeconds:    viper.GetInt("INTERVAL_IN_SECONDS"),
 		GracePeriodInSeconds: int64(viper.GetInt("GRACE_PERIOD_SECONDS")),
 		Labels:               labels,
+		IncludeFinalizers:    viper.GetBool("INCLUDE_FINALIZERS"),
 	}
 }
 
-func InitKubernetesClient() kubernetes.Interface {
-	kubeConfigEnvPath := viper.GetString("KUBECONFIG")
-	if kubeConfigEnvPath != "" {
-		return getLocalKubernetesClient(&kubeConfigEnvPath)
-	}
-	return getInClusterKubernetesClient()
-}
-
-func getLocalKubernetesClient(path *string) kubernetes.Interface {
-	logger, _ := zap.NewDevelopment()
-	defer logger.Sync() // flushes buffer, if any
-	log := logger.Sugar()
-	// use the current context in kubeconfig
-	config, err := clientcmd.BuildConfigFromFlags("", *path)
-	if err != nil {
-		log.Error("Failed to get kubeconfig: %s", err.Error())
-		return nil
-	}
-	clientset, err := kubernetes.NewForConfig(config)
-	if err != nil {
-		panic(err.Error())
-	}
-
-	return clientset
-}
-
-func getInClusterKubernetesClient() kubernetes.Interface {
-	logger, _ := zap.NewDevelopment()
-	defer logger.Sync() // flushes buffer, if any
-	log := logger.Sugar()
-	config, err := rest.InClusterConfig()
-	if err != nil {
-		log.Error("Failed to get kubeconfig: %s", err.Error())
-		return nil
-	}
-	clientset, err := kubernetes.NewForConfig(config)
-	if err != nil {
-		panic(err.Error())
-	}
-	return clientset
-}
-
-func (p *PodChaosMonkey) getAndFilterPods() []v1.Pod {
+func (p *PodChaosMonkey) getPodList() []v1.Pod {
 	logger, _ := zap.NewDevelopment()
 	defer logger.Sync() // flushes buffer, if any
 	log := logger.Sugar()
 
 	podList, err := p.Client.CoreV1().Pods(p.Namespace).List(context.TODO(), metav1.ListOptions{TimeoutSeconds: &p.GracePeriodInSeconds})
 	if err != nil {
-		panic(err.Error())
+		log.Warnf("No pods found in namespace %s", p.Namespace)
 	}
 
-	filteredPods := filterPodsByLabels(podList.Items, p.Labels)
+	filteredPods := p.filterPods(podList.Items)
 	log.Debugf("Total %d pods, %d match the label selector", len(podList.Items), len(filteredPods))
 	return filteredPods
 }
 
+func (p *PodChaosMonkey) filterPods(pods []v1.Pod) []v1.Pod {
+	results := filterPodsByLabels(pods, p.Labels)
+	results = filterPodsByState(results, v1.PodRunning, p.IncludeFinalizers)
+	return results
+}
 func filterPodsByLabels(pods []v1.Pod, labelSelector labels.Selector) []v1.Pod {
 	results := []v1.Pod{}
 
@@ -105,6 +68,20 @@ func filterPodsByLabels(pods []v1.Pod, labelSelector labels.Selector) []v1.Pod {
 		selector := labels.Set(pod.Labels)
 		if labelSelector.Matches(selector) {
 			results = append(results, pod)
+		}
+	}
+	return results
+}
+
+func filterPodsByState(pods []v1.Pod, phase v1.PodPhase, includeFinalizers bool) []v1.Pod {
+	results := []v1.Pod{}
+
+	for _, pod := range pods {
+		if pod.Status.Phase == phase {
+			// Pods that have finalizers should not be deleted, unless we force it with the includeVariables config
+			if pod.ObjectMeta.Finalizers == nil || includeFinalizers {
+				results = append(results, pod)
+			}
 		}
 	}
 	return results
@@ -131,11 +108,14 @@ func (p *PodChaosMonkey) deletePods(pods []v1.Pod) {
 		log.Infof("No pods matched the label selector")
 	}
 }
-
+func (p *PodChaosMonkey) FilterAndDeletePod(ctx context.Context) {
+	pods := p.getPodList()
+	filteredPods := p.filterPods(pods)
+	p.deletePods(filteredPods)
+}
 func (p *PodChaosMonkey) Start(ctx context.Context) {
 	for {
-		pods := p.getAndFilterPods()
-		p.deletePods(pods)
+		p.FilterAndDeletePod(ctx)
 		time.Sleep(time.Duration(p.IntervalInSeconds) * time.Second)
 	}
 }

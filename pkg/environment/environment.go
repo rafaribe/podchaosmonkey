@@ -14,6 +14,7 @@ func LoadEnv() {
 	viper.SetDefault("GRACE_PERIOD_SECONDS", 5)
 	viper.SetDefault("NAMESPACE", "workloads")
 	viper.SetDefault("LABELS", "podchaosmonkey=true")
+	viper.SetDefault("INCLUDE_FINALIZERS", "false")
 }
 
 // Utility Functuon to set the env vars during testing
