@@ -1,0 +1,14 @@
+apiVersion: v1
+entries:
+  podchaosmonkey:
+  - apiVersion: v2
+    appVersion: 0.0.1
+    created: "2022-08-18T18:39:45.521296117Z"
+    description: A Helm chart for Kubernetes
+    digest: 0e4de565d84af30e794d7d47e402a6ba2bac5ad7866663023a4c2a39e22e8689
+    name: podchaosmonkey
+    type: application
+    urls:
+    - https://github.com/rafaribe/podchaosmonkey/releases/download/podchaosmonkey-0.0.2/podchaosmonkey-0.0.2.tgz
+    version: 0.0.2
+generated: "2022-08-18T18:39:45.521300717Z"
