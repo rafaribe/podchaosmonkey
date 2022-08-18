@@ -25,6 +25,7 @@ serviceAccount:
 clusterRole:
   create: true
   name: "pod-chaos-monkey"
+  targetNamespace: "workloads" 
 podAnnotations: {}
 
 podSecurityContext: {}
